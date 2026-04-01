@@ -1,70 +1,214 @@
-# Getting Started with Create React App
+# FableForge
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+FableForge is an AI-powered storytelling platform that generates rich fables, extracts their moral core, and evaluates the result with an NLP pipeline. The project combines a React frontend, a Node/Express API, and a FastAPI service powered by Groq-hosted LLMs plus linguistic analysis tools such as NLTK, spaCy, TextBlob, and VADER.
 
-## Available Scripts
+## Highlights
 
-In the project directory, you can run:
+- Generate long-form fables from a simple prompt
+- Choose between multiple Groq LLM models
+- Extract keywords, entities, and character names from the generated story
+- Score each story for engagement, coherence, sentiment, and moral clarity
+- Persist stories and user feedback in MongoDB
+- Browse recent stories through the frontend experience
 
-### `npm start`
+## Architecture
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+FableForge is split into three parts:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+1. `front-end`
+React + Vite client for prompt input, story display, analytics badges, and recent fables.
 
-### `npm test`
+2. `back-end`
+Node.js + Express API that validates requests, proxies generation calls to the Python service, and stores stories in MongoDB.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+3. `python-service`
+FastAPI service that runs the LLM agent pipeline and NLP evaluation workflow.
 
-### `npm run build`
+## Tech Stack
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- Frontend: React, Vite, Axios
+- Backend: Node.js, Express, Mongoose, Axios, CORS, Morgan
+- Python service: FastAPI, Uvicorn, LangChain Groq, spaCy, NLTK, TextBlob
+- Database: MongoDB
+- LLM provider: Groq
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Project Structure
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```text
+FableForge/
+|- front-end/
+|- back-end/
+|- python-service/
+|- package.json
+|- package-lock.json
+`- README.md
+```
 
-### `npm run eject`
+## How It Works
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+1. The user enters a story prompt in the frontend.
+2. The Node/Express backend receives the request at `/api/fable/forge`.
+3. The backend forwards the request to the FastAPI service.
+4. The Python service:
+   - generates a story
+   - derives the moral theme
+   - refines the ending
+   - runs NLP analysis and scoring
+5. The backend stores the final result in MongoDB.
+6. The frontend displays the generated fable, moral, and evaluation metrics.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Environment Variables
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### `back-end/.env`
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```env
+MONGO_URI=mongodb://localhost:27017/FableForge
+PORT=5000
+CLIENT_URL=http://localhost:5173
+PYTHON_SERVICE_URL=http://localhost:8000
+```
 
-## Learn More
+### `python-service/.env`
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```env
+GROQ_API_KEY=your_groq_api_key_here
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+An example file is already included at `python-service/.env.example`.
 
-### Code Splitting
+## Local Setup
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Prerequisites
 
-### Analyzing the Bundle Size
+- Node.js 18+
+- Python 3.10+
+- MongoDB running locally or an accessible MongoDB URI
+- A valid Groq API key
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### 1. Clone the repository
 
-### Making a Progressive Web App
+```bash
+git clone https://github.com/Umamaheswari-2005/FableForge.git
+cd FableForge
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### 2. Install frontend and backend dependencies
 
-### Advanced Configuration
+```bash
+npm install
+cd front-end && npm install
+cd ../back-end && npm install
+cd ..
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### 3. Install Python dependencies
 
-### Deployment
+```bash
+cd python-service
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+cd ..
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Note: the Python service auto-downloads missing NLTK resources and attempts to install the `en_core_web_sm` spaCy model if it is not already available.
 
-### `npm run build` fails to minify
+### 4. Configure environment files
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Create these files locally:
+
+- `back-end/.env`
+- `python-service/.env`
+
+Then add your MongoDB connection and Groq API key.
+
+## Running the Application
+
+Start the services in this order using separate terminals.
+
+### Terminal 1: Python service
+
+```bash
+cd python-service
+venv\Scripts\activate
+uvicorn main:app --reload --port 8000
+```
+
+### Terminal 2: Node/Express backend
+
+```bash
+cd back-end
+npm run dev
+```
+
+### Terminal 3: Frontend
+
+```bash
+cd front-end
+npm run dev
+```
+
+Frontend: `http://localhost:5173`
+
+Backend health check: `http://localhost:5000/api/health`
+
+Python health check: `http://localhost:8000/health`
+
+## API Overview
+
+### Backend routes
+
+- `POST /api/fable/forge`  
+  Generates a full story, moral, NLP summary, and evaluation scores.
+
+- `POST /api/fable/keywords`  
+  Extracts keywords and entity hints from input text.
+
+- `GET /api/stories`  
+  Returns recent saved stories with pagination.
+
+- `GET /api/stories/:id`  
+  Returns one story by id.
+
+- `POST /api/stories/:id/feedback`  
+  Saves `positive` or `negative` feedback for a story.
+
+- `DELETE /api/stories/:id`  
+  Deletes a saved story.
+
+### Python routes
+
+- `GET /health`
+- `GET /models`
+- `POST /forge`
+- `POST /nlp`
+
+## Output Data
+
+Each generated story can include:
+
+- Full story text
+- Moral sentence
+- Selected model metadata
+- Extracted keywords
+- Named entities and character names
+- Sentiment, readability, coherence, richness, and engagement scores
+- User feedback status
+
+## Security Notes
+
+- Never commit real API keys or `.env` files
+- `node_modules`, build artifacts, and local environment files are ignored by Git
+- Use `python-service/.env.example` as the safe template for shared setup
+
+## Future Improvements
+
+- Add authentication and user-specific story libraries
+- Add deployment configuration for cloud hosting
+- Add automated tests across all three services
+- Improve observability and error reporting
+- Support more model providers and prompt templates
+
+## License
+
+This project currently does not declare a license. Add one before public reuse or distribution if needed.
